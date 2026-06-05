@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fasting Tracker Pro</title>
+<link rel="manifest" href="manifest.json">
+<style>
+body{font-family:Arial,sans-serif;max-width:700px;margin:auto;padding:16px}
+.card{border:1px solid #ddd;border-radius:12px;padding:12px;margin:12px 0}
+input,button{padding:10px;margin:4px}
+.big{font-size:1.8rem;font-weight:bold}
+</style>
+</head>
+<body>
+<h1>🥗 Fasting Tracker Pro (18:6)</h1>
+<div class="card">
+<label>Fast Start Time</label><br>
+<input type="datetime-local" id="start">
+<button onclick="startFast()">Start Fast</button>
+</div>
+
+<div class="card">
+<p>Current Streak: <span id="streak">0</span> days</p>
+<p>Water Intake: <span id="water">0</span> glasses</p>
+<button onclick="addWater()">+ Water</button>
+</div>
+
+<div class="card">
+<p>Fast Ends: <span id="fastEnd">-</span></p>
+<p>Eating Window Ends: <span id="eatEnd">-</span></p>
+<div class="big" id="countdown">Ready</div>
+</div>
+
+<script>
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
+
+let target=null;
+
+function save(k,v){localStorage.setItem(k,JSON.stringify(v));}
+function load(k,d){return JSON.parse(localStorage.getItem(k)||JSON.stringify(d));}
+
+document.getElementById('streak').textContent=load('streak',0);
+document.getElementById('water').textContent=load('water',0);
+
+function addWater(){
+ let w=load('water',0)+1;
+ save('water',w);
+ document.getElementById('water').textContent=w;
+}
+
+function startFast(){
+ const v=document.getElementById('start').value;
+ if(!v)return;
+ const start=new Date(v);
+ const fastEnd=new Date(start.getTime()+18*3600*1000);
+ const eatEnd=new Date(fastEnd.getTime()+6*3600*1000);
+
+ target=fastEnd;
+ document.getElementById('fastEnd').textContent=fastEnd.toLocaleString();
+ document.getElementById('eatEnd').textContent=eatEnd.toLocaleString();
+
+ let s=load('streak',0)+1;
+ save('streak',s);
+ document.getElementById('streak').textContent=s;
+}
+
+setInterval(()=>{
+ if(!target)return;
+ let d=target-new Date();
+ if(d<=0){document.getElementById('countdown').textContent='Fast Complete 🎉'; return;}
+ let h=Math.floor(d/3600000);
+ let m=Math.floor((d%3600000)/60000);
+ let s=Math.floor((d%60000)/1000);
+ document.getElementById('countdown').textContent=`${h}h ${m}m ${s}s`;
+},1000);
+</script>
+</body>
+</html>
